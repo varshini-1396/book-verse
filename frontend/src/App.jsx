@@ -1,19 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Signup from './components/Signup';
+import Login from './Login';
 import { Book, Plus, Search, Heart, Star, BookOpen } from 'lucide-react';
+import BookSearch from './BookSearch';
+import Feed from './Feed';
+import PostEditor from './components/PostEditor';
+import PrivateNotes from './components/PrivateNotes';
 
-interface BookType {
-  id: string;
-  title: string;
-  author: string;
-  genre: string;
-  status: 'reading' | 'completed' | 'want-to-read';
-  progress: number;
-  rating?: number;
-  cover?: string;
-  dateAdded: string;
+// AuthContext for managing authentication state
+const AuthContext = createContext();
+
+export function useAuth() {
+  return useContext(AuthContext);
 }
 
-const sampleBooks: BookType[] = [
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem('token');
+    return token ? { token } : null;
+  });
+
+  const login = (token) => {
+    localStorage.setItem('token', token);
+    setUser({ token });
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// BookType removed, use plain JS objects
+const sampleBooks = [
   {
     id: '1',
     title: 'The Midnight Library',
@@ -45,8 +71,8 @@ const sampleBooks: BookType[] = [
   }
 ];
 
-function BookCard({ book }: { book: BookType }) {
-  const getStatusColor = (status: string) => {
+function BookCard({ book }) {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'reading': return 'bg-blue-100 text-blue-800';
@@ -55,7 +81,7 @@ function BookCard({ book }: { book: BookType }) {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status) => {
     switch (status) {
       case 'completed': return 'Completed';
       case 'reading': return 'Reading';
@@ -103,7 +129,7 @@ function BookCard({ book }: { book: BookType }) {
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i} 
-              className={`w-4 h-4 ${i < book.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+              className={`w-4 h-4 ${i < book.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
             />
           ))}
         </div>
@@ -112,7 +138,7 @@ function BookCard({ book }: { book: BookType }) {
   );
 }
 
-function AddBookModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+function AddBookModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
@@ -183,7 +209,7 @@ function AddBookModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 }
 
 function App() {
-  const [books] = useState<BookType[]>(sampleBooks);
+  const [books] = useState(sampleBooks);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -192,109 +218,25 @@ function App() {
     book.author.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Dummy userId and bookId for PostEditor demo; replace with real state/logic as needed
+  const userId = 1;
+  const bookId = 1;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">BookVault</h1>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search books..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-64"
-                />
-              </div>
-              
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Book
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Books</p>
-                <p className="text-2xl font-bold text-gray-900">{books.length}</p>
-              </div>
-              <Book className="w-8 h-8 text-indigo-600" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Currently Reading</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {books.filter(b => b.status === 'reading').length}
-                </p>
-              </div>
-              <BookOpen className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {books.filter(b => b.status === 'completed').length}
-                </p>
-              </div>
-              <Star className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Books Grid */}
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            My Library ({filteredBooks.length} books)
-          </h2>
-          
-          {filteredBooks.length === 0 ? (
-            <div className="text-center py-12">
-              <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No books found. Add your first book to get started!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredBooks.map(book => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Add Book Modal */}
-      <AddBookModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-      />
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/search" element={<BookSearch />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/post" element={<PostEditor userId={userId} bookId={bookId} />} />
+          <Route path="/notes" element={<PrivateNotes userId={userId} />} />
+          {/* Add more routes here */}
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
