@@ -1,12 +1,13 @@
 import React, { useState, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Signup from './components/Signup';
-import Login from './Login';
+import Login from './components/Login';
 import { Book, Plus, Search, Heart, Star, BookOpen } from 'lucide-react';
-import BookSearch from './BookSearch';
-import Feed from './Feed';
+import BookSearch from './components/BookSearch';
+import Feed from './components/Feed';
 import PostEditor from './components/PostEditor';
 import PrivateNotes from './components/PrivateNotes';
+import LandingPage from './components/LandingPage';
 
 // AuthContext for managing authentication state
 const AuthContext = createContext();
@@ -232,7 +233,7 @@ function App() {
           <Route path="/feed" element={<Feed />} />
           <Route path="/post" element={<PostEditor userId={userId} bookId={bookId} />} />
           <Route path="/notes" element={<PrivateNotes userId={userId} />} />
-          {/* Add more routes here */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>

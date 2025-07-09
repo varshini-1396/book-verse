@@ -1,17 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
+const pool = require('./db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 4000;
-
-// PostgreSQL connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
