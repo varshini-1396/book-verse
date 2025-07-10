@@ -27,7 +27,7 @@ function Login() {
     setLoading(true);
     try {
       const res = await axios.post('/api/auth/login', form);
-      login(res.data.token);
+      login(res.data.token, res.data.user); // Store both token and user info
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed.');

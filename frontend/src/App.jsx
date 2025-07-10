@@ -8,6 +8,8 @@ import Feed from './components/Feed';
 import PostEditor from './components/PostEditor';
 import PrivateNotes from './components/PrivateNotes';
 import LandingPage from './components/LandingPage';
+import Profile from './components/Profile';
+import PrivateRoute from './components/PrivateRoute'; // If you have a separate file, otherwise define it here
 
 // AuthContext for managing authentication state
 const AuthContext = createContext();
@@ -230,9 +232,10 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/search" element={<BookSearch />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/post" element={<PostEditor userId={userId} bookId={bookId} />} />
-          <Route path="/notes" element={<PrivateNotes userId={userId} />} />
+          <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
+          <Route path="/post" element={<PrivateRoute><PostEditor userId={userId} bookId={bookId} /></PrivateRoute>} />
+          <Route path="/notes" element={<PrivateRoute><PrivateNotes userId={userId} /></PrivateRoute>} />
+          <Route path="/profile/:username" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
